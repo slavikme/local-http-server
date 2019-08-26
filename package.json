@@ -1,0 +1,16 @@
+{
+  "name": "local-http-server",
+  "version": "1.0.0",
+  "description": "Local HTTP Server to get access to the static Player and Editor resource files",
+  "main": "app.js",
+  "dependencies": {
+    "dotenv": "^8.1.0",
+    "local-web-server": "^3.0.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Slavik Meltser <slavik.meltser@walkme.com>",
+  "license": "UNLICENSED"
+}
