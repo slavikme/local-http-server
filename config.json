@@ -1,9 +1,20 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "es5",
-    "sourceMap": true
-  },
+  "serverList": [
+    {
+      "name": "Player Resources",
+      "http_port": "8001",
+      "path": "../player"
+    },{
+      "name": "Editor Resources",
+      "http_port": "8002",
+      "path": "../editor"
+    },{
+      "name": "Main Resources",
+      "http_port": "80",
+      "https_port": "443",
+      "path": "../editor"
+    }
+  ],
   "exclude": [
     "node_modules"
   ]

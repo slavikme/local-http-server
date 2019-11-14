@@ -1,12 +1,10 @@
-const LocalWebServer = require('local-web-server');
+const Server = require('./server.class');
 require('dotenv').config();
 
 const PLAYER_SERVER_PORT = process.env.PLAYER_SERVER_PORT || '8001';
-const PLAYER_SERVER_PROTOCOL = process.env.PLAYER_SERVER_PROTOCOL || 'https';
 const PLAYER_PATH = process.env.PLAYER_PATH || '../player/player';
 
 const EDITOR_SERVER_PORT = process.env.EDITOR_SERVER_PORT|| '8002';
-const EDITOR_SERVER_PROTOCOL = process.env.EDITOR_SERVER_PROTOCOL || 'https';
 const EDITOR_PATH = process.env.EDITOR_PATH || '../editor/source';
 
 const LOCAL_SERVER_PORT_HTTP = process.env.LOCAL_SERVER_PORT_HTTP || '80';
@@ -15,47 +13,23 @@ const LOCAL_PLAYER_ALIAS_PATH = process.env.LOCAL_PLAYER_ALIAS_PATH || 'mt';
 const LOCAL_EDITOR_ALIAS_PATH = process.env.LOCAL_EDITOR_ALIAS_PATH || 'WM.Editor';
 const LOCAL_PUBLIC_PATH = process.env.LOCAL_PUBLIC_PATH || 'public';
 
-const connectToServer = (serverName, port, path = '.', config = {}) => {
-    config.port = port;
-    config.directory = path;
+(async () => {
 
-    console.log(`Creating ${serverName} server...`);
-    let ws = LocalWebServer.create(config)
-        .on('verbose', (eventName, data) => {
-            switch (eventName) {
-                case 'server.listening':
-                    console.log(`${serverName} server is listening on ${data.join(', ')}`);
-                    break;
-                case 'server.error':
-                    console.error(data);
-                    break;
-                case 'server.close':
-                    console.log(`${serverName} server stopped`)
-                    break;
-            }
-        });
-    ws.serverName = serverName;
-    return ws;
-};
+    const [playerServer, editorServer] = await Promise.all([
+        (new Server('Player Resources', PLAYER_PATH, PLAYER_SERVER_PORT)).connect(),
+        (new Server('Editor Resources', EDITOR_PATH, EDITOR_SERVER_PORT)).connect(),
+    ]);
 
-const mainServerRewrite = [
-    `/${LOCAL_PLAYER_ALIAS_PATH}/(.*) -> ${PLAYER_SERVER_PROTOCOL}://127.0.0.1:${PLAYER_SERVER_PORT}/$1`,
-    `/${LOCAL_EDITOR_ALIAS_PATH}/(.*) -> ${EDITOR_SERVER_PROTOCOL}://127.0.0.1:${EDITOR_SERVER_PORT}/$1`
-];
+    const mainServer = await (new Server('Main Resources HTTP', LOCAL_PUBLIC_PATH, LOCAL_SERVER_PORT_HTTP, LOCAL_SERVER_PORT_HTTPS))
+        .createAliasPath(LOCAL_PLAYER_ALIAS_PATH, playerServer)
+        .createAliasPath(LOCAL_EDITOR_ALIAS_PATH, editorServer)
+        .connect();
 
-const serverList = [
-    connectToServer('Player Resources', PLAYER_SERVER_PORT, PLAYER_PATH, {https: PLAYER_SERVER_PROTOCOL=='https'}),
-    connectToServer('Editor Resources', EDITOR_SERVER_PORT, EDITOR_PATH, {https: EDITOR_SERVER_PROTOCOL=='https'}),
-    connectToServer('Main Resources HTTP', LOCAL_SERVER_PORT_HTTP, LOCAL_PUBLIC_PATH, {rewrite: mainServerRewrite}),
-    connectToServer('Main Resources HTTPS', LOCAL_SERVER_PORT_HTTPS, LOCAL_PUBLIC_PATH, {rewrite: mainServerRewrite, https: true}),
-];
-
-process.on('SIGINT', function() {
-    console.log("\nShutting down servers...");
-    for ( let i=0; i<serverList.length; i++ ) {
-        serverList[i].server.close();
-        console.log(`${serverList[i].serverName} server stopped`);
-    }
-    process.exit();
-});
-
+    process.on('SIGINT', function() {
+        console.log("\nShutting down servers...");
+        playerServer.disconnect();
+        editorServer.disconnect();
+        mainServer.disconnect();
+        process.exit();
+    });
+})();

@@ -4,12 +4,16 @@
   "description": "Local HTTP Server to get access to the static Player and Editor resource files",
   "main": "app.js",
   "dependencies": {
+    "change-case": "^3.1.0",
     "dotenv": "^8.1.0",
     "local-web-server": "^3.0.7"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "electron": "^6.0.7"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tray": "electron tray.js"
   },
   "author": "Slavik Meltser <slavik.meltser@walkme.com>",
   "license": "UNLICENSED"
