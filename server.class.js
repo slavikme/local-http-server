@@ -133,7 +133,7 @@ class Server {
         if ( server instanceof Server && !server.alive )
             throw new Error(`Server ${server.name} must be alive before creating an alias`)
         else
-            url = new URL(server.listenURL);
+            url = new URL(redirectUrl);
 
         if ( !url )
             throw new Error("An instance of Server or URL must be provided");
