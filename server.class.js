@@ -125,9 +125,10 @@ class Server {
      * Create an alias to another server.
      * @param {string} aliasPath
      * @param {Server|URL} server
+     * @param {string} redirectUrl
      * @returns {Server}
      */
-    createAliasPath(aliasPath, server) {
+    createAliasPath(aliasPath, server, redirectUrl = server.listenURL) {
         let url = server instanceof URL ? server : undefined;
         if ( server instanceof Server && !server.alive )
             throw new Error(`Server ${server.name} must be alive before creating an alias`)
@@ -142,8 +143,8 @@ class Server {
 
         aliasPath = encodeURIComponent(aliasPath).replace(/%2F/g,"/");
 
-        this.#baseConfig.rewrite.push(`/${aliasPath}/(.*) -> ${server.listenURL}/$1`);
-        console.log(`A path alias has been added to ${this.#name} server: '/${aliasPath}' -> '${server.listenURL}'`);
+        this.#baseConfig.rewrite.push(`/${aliasPath}/(.*) -> ${redirectUrl}/$1`);
+        console.log(`A path alias has been added to ${this.#name} server: '/${aliasPath}' -> '${redirectUrl}'`);
 
         return this;
     }
