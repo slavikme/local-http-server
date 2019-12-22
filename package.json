@@ -4,6 +4,8 @@
   "description": "Local HTTP Server to get access to the static Player and Editor resource files",
   "main": "app.js",
   "dependencies": {
+    "abort-controller": "^3.0.0",
+    "node-fetch": "^2.6.0",
     "change-case": "^3.1.0",
     "dotenv": "^8.1.0",
     "local-web-server": "^3.0.7"

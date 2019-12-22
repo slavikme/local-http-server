@@ -1,4 +1,6 @@
 const LocalWebServer = require('local-web-server');
+const { AbortController } = require('abort-controller');
+const fetch = require('node-fetch');
 
 class Server {
 
@@ -111,6 +113,8 @@ class Server {
 
         listenListHttp instanceof Array && (this.#listenURLs = this.#listenURLs.concat(listenListHttp));
         listenListHttps instanceof Array && (this.#listenURLs = this.#listenURLs.concat(listenListHttps));
+
+        this.#listenURLs = await Server.filterUnresponsiveURLs(this.#listenURLs);
 
         if ( (this.http || this.https) )
             if ( this.#listenURLs.length )
@@ -238,6 +242,35 @@ class Server {
         console.log(`${this.#name} server stopped`);
 
         return this;
+    }
+
+    /**
+     * Eliminate all URLs that are unresponsive within a certain amount of time.
+     * @param {string[]} urls A list of URLs to test and filter.
+     * @param {number} [timeout=50] Number of milliseconds each request should stop trying to reach the server. Note,
+     * that for external URLs, you may consider to provide a bigger value.
+     * @returns {Promise<string[]>}
+     */
+    static async filterUnresponsiveURLs(urls, timeout = 100) {
+        const filteredUrls = [];
+
+        for ( let url of urls ) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+                await fetch(url, { signal: controller.signal });
+                filteredUrls.push(url);
+                clearTimeout(timeoutId);
+            } catch (e) {
+                //Uncomment for debug:
+                // console.timeEnd(url);
+                // e.url = url;
+                // e.timeout = timeout;
+                // console.error(e);
+            }
+        }
+
+        return filteredUrls;
     }
 }
 
